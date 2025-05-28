@@ -32,7 +32,17 @@ public slots:
     void animationShow();
 	void setInputMethodHints(Qt::InputMethodHints hints);
     void onAnimationFinished();
+    void setDraggable(bool draggable);  // 新增setter方法
 private:
+    bool m_bDraggable = true;  // 新增拖动控制变量
+    bool m_bMousePressed = false;
+    QPoint m_startPos;
+    QPoint m_initialPos;  // 新增初始位置记录
+
+protected:
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
     NormalKeyboard * normalKeyboard;
     SymbolKeyboard * symbolKeyboard;
     CandidatesListWidget * textDisplayWidget;

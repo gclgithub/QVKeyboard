@@ -4,6 +4,7 @@
 #include <QPropertyAnimation>
 #include <QApplication>
 #include <QScreen>
+#include <QMouseEvent>
 
 KeyboardContainer::KeyboardContainer(QWidget *parent) : QWidget(parent)
 {
@@ -113,6 +114,8 @@ KeyboardContainer::KeyboardContainer(QWidget *parent) : QWidget(parent)
     animation->setDuration(300);
     connect(animation,&QAbstractAnimation::finished,this,&KeyboardContainer::onAnimationFinished);
     m_hiding = false;
+
+    m_initialPos = this->pos();
 }
 
 KeyboardContainer::~KeyboardContainer()
@@ -169,7 +172,6 @@ void KeyboardContainer::animationHide()
         animation->stop();
 
     m_hiding = true;
-
     animation->setStartValue(QPoint(pos().x(),pos().y()));
     animation->setEndValue(QPoint(pos().x(),screenHeight));
     animation->start();
@@ -177,8 +179,13 @@ void KeyboardContainer::animationHide()
 
 void KeyboardContainer::animationShow()
 {
-    move(this->pos().x(),qApp->primaryScreen()->size().height());
+    if(isAnimating()) return;
 
+ //   // 恢复初始位置
+	//move(m_initialPos);
+	//show();
+
+    move(this->pos().x(),qApp->primaryScreen()->size().height());
     show();
 
     int screenHeight = qApp->primaryScreen()->size().height();
@@ -199,4 +206,34 @@ void KeyboardContainer::onAnimationFinished()
         hide();
 
     m_hiding = false;
+}
+
+void KeyboardContainer::setDraggable(bool draggable) 
+{
+    m_bDraggable = draggable;
+}
+
+void KeyboardContainer::mousePressEvent(QMouseEvent *e)
+{
+    if(m_bDraggable) {
+        m_bMousePressed = true;
+        m_startPos = e->globalPos();
+    }
+    QWidget::mousePressEvent(e);
+}
+
+void KeyboardContainer::mouseMoveEvent(QMouseEvent *e)
+{
+    if(m_bMousePressed) {
+        QPoint delta = e->globalPos() - m_startPos;
+        move(pos() + delta);
+        m_startPos = e->globalPos();
+    }
+    QWidget::mouseMoveEvent(e);
+}
+
+void KeyboardContainer::mouseReleaseEvent(QMouseEvent *e)
+{
+    m_bMousePressed = false;
+    QWidget::mouseReleaseEvent(e);
 }
